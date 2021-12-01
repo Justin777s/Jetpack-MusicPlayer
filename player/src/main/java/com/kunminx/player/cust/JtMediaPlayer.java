@@ -49,6 +49,9 @@ public class JtMediaPlayer implements
 
     private Handler mRefreshHandler = new Handler();
 
+    /***
+     * 释放资源
+     */
     public void release(){
 
         mRefreshHandler.removeCallbacks(mCalcProgressRunnable);

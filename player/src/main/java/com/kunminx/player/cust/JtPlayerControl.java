@@ -39,8 +39,6 @@ public class JtPlayerControl {
     private Boolean isPrepare = false ;
 
 
-
-    //TODO
     public String getProgressText(){
 
         String result = "";
@@ -49,8 +47,12 @@ public class JtPlayerControl {
             if(JtMediaPlayer.getInstance().getMediaPlayer().getDuration()>5000000){
                 result="00:10";
             }else{
-                result = intToString(JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition(),null)
-                        +":"+intToString( JtMediaPlayer.getInstance().getMediaPlayer().getDuration(),null);
+                if(playingInfo.getProgress()>=100){
+                    result = intToString( JtMediaPlayer.getInstance().getMediaPlayer().getDuration(),null)+":"+intToString( JtMediaPlayer.getInstance().getMediaPlayer().getDuration(),null);
+                }else{
+                    result = intToString(JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition(),null)
+                            +":"+intToString( JtMediaPlayer.getInstance().getMediaPlayer().getDuration(),null);
+                }
             }
 
             Log.d(TAG,JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition()+","+ JtMediaPlayer.getInstance().getMediaPlayer().getDuration());
@@ -161,6 +163,8 @@ public class JtPlayerControl {
                     Log.d(TAG,"播放器准备就绪");
                 }else if(state == JtMediaPlayer.PlayerState.COMPLETE){
                     playingInfo.setProgress((100));
+                    getPlayingInfoLiveData().setValue(playingInfo);
+                    getStateLiveDataLiveData().setValue(JtMediaPlayer.PlayerState.COMPLETE);
                 }
 
             }

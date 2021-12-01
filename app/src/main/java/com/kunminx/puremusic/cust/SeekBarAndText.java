@@ -126,7 +126,7 @@ public class SeekBarAndText extends AppCompatSeekBar {
      * 进度监听
      */
     public interface OnSeekBarAndtextChangeListener {
-        public void onProgress(SeekBar seekBar, int progress, float indicatorOffset);
+          void onProgress(SeekBar seekBar, int progress, float indicatorOffset);
         /**
          * 进度监听回调
          *
@@ -134,21 +134,21 @@ public class SeekBarAndText extends AppCompatSeekBar {
          * @param progress        进度
          * @param fromuser
          */
-        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromuser);
+          void onProgressChanged(SeekBar seekBar, int progress, boolean fromuser);
  
         /**
          * 开始拖动
          *
          * @param seekBar SeekBar
          */
-        public void onStartTrackingTouch(SeekBar seekBar);
+          void onStartTrackingTouch(SeekBar seekBar);
  
         /**
          * 停止拖动
          *
          * @param seekBar SeekBar
          */
-        public void onStopTrackingTouch(SeekBar seekBar);
+          void onStopTrackingTouch(SeekBar seekBar);
     }
  
     /**
