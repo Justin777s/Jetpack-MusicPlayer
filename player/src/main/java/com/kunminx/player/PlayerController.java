@@ -43,9 +43,24 @@ public class PlayerController<B extends BaseAlbumItem, M extends BaseMusicItem> 
 
   private ICacheProxy mICacheProxy;
 
+  /***
+   *  切换音乐时，更新后的音乐信息
+   */
   private final MutableLiveData<ChangeMusic> changeMusicLiveData = new MutableLiveData<>();
+  /***
+   * 播放中的音乐状态信息 ，时长，位置等
+   */
   private final MutableLiveData<PlayingMusic> playingMusicLiveData = new MutableLiveData<>();
+  /***
+   * 暂停状态
+   */
   private final MutableLiveData<Boolean> pauseLiveData = new MutableLiveData<>();
+  /***
+   *播放模式状态，
+   *     SINGLE_CYCLE,
+   *     LIST_CYCLE,
+   *     RANDOM
+   */
   private final MutableLiveData<Enum> playModeLiveData = new MutableLiveData<>();
 
   private IServiceNotifier mIServiceNotifier;
@@ -151,7 +166,7 @@ public class PlayerController<B extends BaseAlbumItem, M extends BaseMusicItem> 
   }
 
   private void bindProgressListener() {
-    MediaPlayerHelper.getInstance().setProgressInterval(1000).setMediaPlayerHelperCallBack(
+      MediaPlayerHelper.getInstance().setProgressInterval(1000).setMediaPlayerHelperCallBack(
             (state, mediaPlayerHelper, args) -> {
               if (state == MediaPlayerHelper.CallBackState.PROGRESS) {
                 int position = mediaPlayerHelper.getMediaPlayer().getCurrentPosition();

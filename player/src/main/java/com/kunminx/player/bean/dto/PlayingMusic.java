@@ -34,9 +34,13 @@ public class PlayingMusic<
         M extends BaseMusicItem<A>>
         extends ChangeMusic<B, M, A> implements Serializable {
 
+  //当前时间
   private String nowTime;
+  //全部时间
   private String allTime;
+  //总时长
   private int duration;
+  //当前播放位置
   private int playerPosition;
 
   public PlayingMusic(String nowTime, String allTime) {
