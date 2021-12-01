@@ -1,6 +1,5 @@
 package com.kunminx.puremusic.cust;
 
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.kunminx.player.cust.JtMediaPlayer;
 import com.kunminx.player.cust.JtPlayerControl;
-import com.kunminx.puremusic.MainActivity;
 import com.kunminx.puremusic.R;
 
 public class DemoActivity extends AppCompatActivity {
@@ -43,12 +41,7 @@ public class DemoActivity extends AppCompatActivity {
 
     }
 
-    private void updateSeekBar(int progress){
-
-        if(progress >= 100){
-
-        }
-
+    private void updateSeekBar(){
         mSeekBar.postInvalidate();
     }
 
@@ -103,11 +96,7 @@ public class DemoActivity extends AppCompatActivity {
         });
 
 
-        this.findViewById(R.id.btn_index).setOnClickListener(view->{
-            Intent intent = new Intent(DemoActivity.this, MainActivity.class);
 
-            startActivity(intent);
-        });
 
     }
 
@@ -133,13 +122,13 @@ public class DemoActivity extends AppCompatActivity {
         mPlayer.getPauseLiveData().observe(this,  aBoolean ->{
             String tips = "";
             if(aBoolean){
-                tips="暂停";
+                tips="播放停止";
             }else{
-                tips="开始";
+                tips="播放开始";
             }
             Toast.makeText(this,tips,Toast.LENGTH_SHORT).show();
             mTvOuput.setText(tips);
-            Log.i("Demo","开始 " );
+            Log.i("Demo","播放开始 " );
         });
 
         mPlayer.getPlayingInfoLiveData().observe(this, playingInfo -> {
@@ -152,17 +141,16 @@ public class DemoActivity extends AppCompatActivity {
                 }else{
                     mSeekBar.setProgress(playingInfo.getProgress());
                 }
+
             }
         });
 
         mPlayer.getStateLiveDataLiveData().observe(this,state -> {
             if(state == JtMediaPlayer.PlayerState.PREPARED){
                 //更新进度条
-                updateSeekBar(0);
+                updateSeekBar();
             }else if(state == JtMediaPlayer.PlayerState.COMPLETE){
-                //以播放器状态作为最终进度
-                updateSeekBar(100);
-                Log.d(TAG,"COMPLETE" );
+
             }
 
         });
