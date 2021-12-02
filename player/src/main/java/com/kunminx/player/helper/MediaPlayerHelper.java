@@ -195,7 +195,10 @@ public class MediaPlayerHelper implements OnCompletionListener, OnBufferingUpdat
       uiHolder.assetDescriptor = assetMg.openFd(assetName);
       uiHolder.player.setDisplay(null);
       uiHolder.player.reset();
-      uiHolder.player.setDataSource(uiHolder.assetDescriptor.getFileDescriptor(), uiHolder.assetDescriptor.getStartOffset(), uiHolder.assetDescriptor.getLength());
+      uiHolder.player.setDataSource(
+              uiHolder.assetDescriptor.getFileDescriptor(),
+              uiHolder.assetDescriptor.getStartOffset(),
+              uiHolder.assetDescriptor.getLength());
       uiHolder.player.prepare();
     } catch (Exception e) {
       callBack(CallBackState.ERROR, uiHolder.player);
