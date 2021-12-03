@@ -150,7 +150,7 @@ public class DemoActivity extends AppCompatActivity {
                 //更新进度条
                 updateSeekBar();
             }else if(state == JtMediaPlayer.PlayerState.COMPLETE){
-
+     //
             }
 
         });
