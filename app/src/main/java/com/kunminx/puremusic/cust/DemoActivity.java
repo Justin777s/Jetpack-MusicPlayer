@@ -25,7 +25,8 @@ public class DemoActivity extends AppCompatActivity {
     private TextView mTvOuput;
     private SeekBarAndText mSeekBar;
 
-    private String url = "http://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3";
+    private String url = "http://192.25.109.64/chenyong/workspace/-/raw/master/%E9%80%82%E8%80%81%E5%8C%96-%E8%AF%AD%E9%9F%B3%E6%92%AD%E6%8A%A5/src/slh_audio_design/demo01.mp4";
+            //"http://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
