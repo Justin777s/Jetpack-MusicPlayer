@@ -1,6 +1,7 @@
 package com.kunminx.player.cust;
 
 
+import android.os.Build;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
@@ -187,6 +188,24 @@ public class JtPlayerControl {
             isPause = false;
         }
         pauseLiveData.setValue(isPause);
+    }
+
+    public void changeSpeed(float speed) {
+            try{
+                if( JtMediaPlayer.getInstance().isInited()) {
+                    // this checks on API 23 and up
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (JtMediaPlayer.getInstance().getMediaPlayer().isPlaying()) {
+                            JtMediaPlayer.getInstance().getMediaPlayer().setPlaybackParams(JtMediaPlayer.getInstance().getMediaPlayer().getPlaybackParams().setSpeed(speed));
+                        } else {
+                            JtMediaPlayer.getInstance().getMediaPlayer().setPlaybackParams(JtMediaPlayer.getInstance().getMediaPlayer().getPlaybackParams().setSpeed(speed));
+                            JtMediaPlayer.getInstance().getMediaPlayer().pause();
+                        }
+                    }
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
     }
 
     /***

@@ -1,10 +1,16 @@
 package com.kunminx.puremusic.cust;
 
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,6 +20,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.kunminx.player.cust.JtMediaPlayer;
 import com.kunminx.player.cust.JtPlayerControl;
 import com.kunminx.puremusic.R;
+
+import java.io.IOException;
 
 public class DemoActivity extends AppCompatActivity {
 
@@ -25,8 +33,9 @@ public class DemoActivity extends AppCompatActivity {
     private TextView mTvOuput;
     private SeekBarAndText mSeekBar;
 
-    private String url = "http://192.25.109.64/chenyong/workspace/-/raw/master/%E9%80%82%E8%80%81%E5%8C%96-%E8%AF%AD%E9%9F%B3%E6%92%AD%E6%8A%A5/src/slh_audio_design/demo01.mp4";
-            //"http://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3";
+    private String url =
+           // "http://192.25.109.64/chenyong/workspace/-/raw/master/%E9%80%82%E8%80%81%E5%8C%96-%E8%AF%AD%E9%9F%B3%E6%92%AD%E6%8A%A5/assets/audio/female_md.mp3";
+             "http://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,6 +54,7 @@ public class DemoActivity extends AppCompatActivity {
     private void updateSeekBar(){
         mSeekBar.postInvalidate();
     }
+
 
 
     private void initView(){
@@ -95,10 +105,7 @@ public class DemoActivity extends AppCompatActivity {
                 doPlayBySeekChange(position);
             }
         });
-
-
-
-
+        setSpeedOptions();
     }
 
     private void  doPlayBySeekChange(int progress) {
@@ -158,6 +165,40 @@ public class DemoActivity extends AppCompatActivity {
 
 
         return mPlayer;
+    }
+
+
+
+    private String[] getSpeedStrings() {
+        return new String[]{"1.0", "1.2", "1.4", "1.6", "1.8", "2.0"};
+    }
+
+    private void setSpeedOptions() {
+        final Spinner speedOptions = (Spinner)findViewById(R.id.spi_speed);
+        String[] speeds = getSpeedStrings();
+
+        ArrayAdapter<String> arrayAdapter =  new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_dropdown_item, speeds);
+        speedOptions.setAdapter(arrayAdapter);
+
+        // change player playback speed if a speed is selected
+        speedOptions.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+
+
+                    float selectedSpeed = Float.parseFloat(
+                            speedOptions.getItemAtPosition(i).toString());
+
+                    mPlayer.changeSpeed(selectedSpeed);
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
 

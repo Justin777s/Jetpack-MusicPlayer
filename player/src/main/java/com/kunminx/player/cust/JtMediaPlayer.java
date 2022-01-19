@@ -33,6 +33,9 @@ public class JtMediaPlayer implements
 
     private JtMediaPlayerCallBack mCallBack;
 
+    //是否已经初始化
+    private boolean isInited = false;
+
 
     //默认支持的文件格式
     private String[] ext = {
@@ -53,6 +56,7 @@ public class JtMediaPlayer implements
 
         mRefreshHandler.removeCallbacks(mCalcProgressRunnable);
         mediaPlayer.stop();
+        this.isInited = false;
     }
 
     private Runnable mCalcProgressRunnable = new Runnable() {
@@ -82,6 +86,14 @@ public class JtMediaPlayer implements
 
     public MediaPlayer getMediaPlayer(){
         return mediaPlayer;
+    }
+
+    public boolean isInited() {
+        return isInited;
+    }
+
+    public void setInited(boolean inited) {
+        isInited = inited;
     }
 
 
@@ -162,7 +174,7 @@ public class JtMediaPlayer implements
             mediaPlayer.setDisplay(null);
             mediaPlayer.reset();
             mediaPlayer.setDataSource(url);
-
+            setInited(true)  ;
             mediaPlayer.prepareAsync(); //播放器进入prepared状态 回调之后，才能调用start进入isPlaying状态
         } catch (Exception e) {
             e.printStackTrace();
@@ -233,6 +245,7 @@ public class JtMediaPlayer implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
+
         //准备完毕
         Log.v(TAG,"onPrepared:"+mp.getCurrentPosition());
         try{
