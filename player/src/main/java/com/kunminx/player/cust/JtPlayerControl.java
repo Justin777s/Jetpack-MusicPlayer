@@ -219,6 +219,10 @@ public class JtPlayerControl implements IJtPlayerControl {
     private void play(Playable playable) {
         if (playable != null) {
             play(playable.getUrl());
+            if(getPlayingInfoLiveData().getValue()==null){
+                PlayingInfo pInfo = new PlayingInfo();
+                getPlayingInfoLiveData().setValue(pInfo);
+            }
             getPlayingInfoLiveData().getValue().setPlayable(playable);
         }
     }
