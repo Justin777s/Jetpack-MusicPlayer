@@ -7,6 +7,8 @@ package com.kunminx.player.cust.data;
 public class PlayingInfo {
 
 
+    private Playable playable;
+
     private int progress = 0;
 
     public int getProgress() {
@@ -18,5 +20,11 @@ public class PlayingInfo {
     }
 
 
+    public Playable getPlayable() {
+        return playable;
+    }
 
+    public void setPlayable(Playable playable) {
+        this.playable = playable;
+    }
 }

@@ -1,5 +1,6 @@
 package com.kunminx.player.cust.data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /***
@@ -7,6 +8,19 @@ import java.util.List;
  */
 public class PlayList {
 
-    private List<AudioItem> list ;
+    private List<Playable> list ;
+
+
+    public PlayList(){
+        list = new ArrayList<>();
+    }
+
+    public List<Playable> getList() {
+        return list;
+    }
+
+    public void setList(List<Playable> list) {
+        this.list = list;
+    }
 
 }

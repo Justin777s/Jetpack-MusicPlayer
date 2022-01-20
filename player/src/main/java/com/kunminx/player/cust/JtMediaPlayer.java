@@ -2,15 +2,9 @@ package com.kunminx.player.cust;
 
 
 import android.content.res.AssetFileDescriptor;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.util.Log;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 /***
  * 1.封装MediaPlayer操作
@@ -32,10 +26,12 @@ public class JtMediaPlayer implements
 
     private MediaPlayer mediaPlayer ;
 
-    private JtMediaPlayerCallBack mCallBack;
+    private IjtPlayerCallBack mCallBack;
 
     //是否已经初始化
     private boolean isInited = false;
+
+    private boolean isPrepared = false;
 
 
     //默认支持的文件格式
@@ -53,6 +49,9 @@ public class JtMediaPlayer implements
 
     private Handler mRefreshHandler = new Handler();
 
+    /***
+     * 释放进度
+     */
     public void release(){
 
         mRefreshHandler.removeCallbacks(mCalcProgressRunnable);
@@ -68,9 +67,12 @@ public class JtMediaPlayer implements
 
             //获取播放进度
             if(mediaPlayer!=null && mediaPlayer.isPlaying()){
-                int progress =(int) 100.0f * mediaPlayer.getCurrentPosition() / mediaPlayer.getDuration();
-                Log.v(TAG,  "进度："+progress);
-                doCallBack(PlayerState.PROGRESS,new Integer(progress));
+               int progress =(int) 100.0f * mediaPlayer.getCurrentPosition() / mediaPlayer.getDuration();
+
+               if(mCallBack!=null){
+                   Log.v(TAG,  "进度："+progress);
+                   mCallBack.onProgressChanged(instance,progress);
+               }
             }
 
             //递归执行
@@ -80,7 +82,7 @@ public class JtMediaPlayer implements
     };
 
 
-    public JtMediaPlayer setMediaPlayerCallBack(JtMediaPlayerCallBack mCallBack) {
+    public JtMediaPlayer setMediaPlayerCallBack(IjtPlayerCallBack mCallBack) {
         this.mCallBack = mCallBack;
         return instance;
     }
@@ -95,6 +97,11 @@ public class JtMediaPlayer implements
 
     public void setInited(boolean inited) {
         isInited = inited;
+    }
+
+    //通过回调获取播放状态
+    public boolean isPrepared() {
+        return isPrepared;
     }
 
 
@@ -155,6 +162,25 @@ public class JtMediaPlayer implements
         return instance;
     }
 
+    public boolean resumePlay(){
+
+        try {
+            /**
+             * 其实仔细观察优酷app切换播放网络视频时的确像是这样做的：先暂停当前视频，
+             * 让mediaplayer与先前的surfaceHolder脱离“绑定”,当mediaplayer再次准备好要start时，
+             * 再次让mediaplayer与surfaceHolder“绑定”在一起，显示下一个要播放的视频。
+             * 注：MediaPlayer.setDisplay()的作用： 设置SurfaceHolder用于显示的视频部分媒体。
+             */
+            mediaPlayer.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+            doCallBack( PlayerState.ERROR, mediaPlayer);
+            return false;
+        }
+        return true;
+
+    }
+
     /***
      * 提供给外部的播放方法
      * @param fd  本地播放地址
@@ -185,6 +211,9 @@ public class JtMediaPlayer implements
         return true;
 
     }
+
+
+
 
     /***
      * 提供给外部的播放方法
@@ -277,7 +306,7 @@ public class JtMediaPlayer implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-
+        isPrepared = true;
         //准备完毕
         Log.v(TAG,"onPrepared:"+mp.getCurrentPosition());
         try{
@@ -312,23 +341,31 @@ public class JtMediaPlayer implements
 
     private void doCallBack(PlayerState state , Object... args){
         if(mCallBack!=null){
-            mCallBack.callBack(state,instance,args);
+            mCallBack.onStatusChanged(state,instance,args);
         }
     }
 
 
 
     /***
-     * 回调接口定义，
+     * 状态更新回调，
      */
-    public interface  JtMediaPlayerCallBack{
+    public interface IjtPlayerCallBack {
         /***
          *
          * @param state 状态
          * @param jtMediaPlayer 业务播放器对象
          * @param args  扩展参数
          */
-        void callBack(PlayerState state, JtMediaPlayer jtMediaPlayer, Object... args) ;
+        void onStatusChanged(PlayerState state, JtMediaPlayer jtMediaPlayer, Object... args) ;
+
+        /***
+         * 播放进度
+         * @param jtMediaPlayer
+         * @param progress
+         */
+        void onProgressChanged(JtMediaPlayer jtMediaPlayer, int progress) ;
+
     }
 
 

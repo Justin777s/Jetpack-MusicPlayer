@@ -1,14 +1,19 @@
 package com.kunminx.player.cust;
 
 
+import android.app.Application;
 import android.content.res.AssetFileDescriptor;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.lifecycle.MutableLiveData;
 
 import com.kunminx.player.cust.data.ChangedAudio;
+import com.kunminx.player.cust.data.PlayList;
+import com.kunminx.player.cust.data.Playable;
 import com.kunminx.player.cust.data.PlayingInfo;
+import com.kunminx.player.helper.MediaPlayerHelper;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -18,8 +23,7 @@ import java.util.Locale;
 /**
  * 提供播放控制相关的事件，以及状态更新的通知回调（LiveData）
  */
-public class JtPlayerControl {
-
+public class JtPlayerControl implements IJtPlayerControl {
 
     public static final String TAG = JtPlayerControl.class.getSimpleName();
 
@@ -35,72 +39,29 @@ public class JtPlayerControl {
     //播放模式 暂时用不到
     private MutableLiveData<Integer> playModeLiveData = new MutableLiveData<>();
 
-    private PlayingInfo  playingInfo = new PlayingInfo();
+    private PlayingInfo playingInfo = new PlayingInfo();
     private ChangedAudio changedAudio = new ChangedAudio();
-    private Boolean isPause = false ;
-    private Boolean isPrepare = false ;
+    private Boolean isPause = false;
+    private Boolean isPrepare = false;
+
+    private PlayListManager playListManager;
 
 
-
-    //TODO
-    public String getProgressText(){
-
+    public String getProgressText() {
         String result = "";
         try {
             //TODO 未执行初始化，这里的总时长需要外部传入 未prepared的时候返回 5832704
-            if(JtMediaPlayer.getInstance().getMediaPlayer().getDuration()>5000000){
-                result="00:10";
-            }else{
-                result = intToString(JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition(),null)
-                        +":"+intToString( JtMediaPlayer.getInstance().getMediaPlayer().getDuration(),null);
+            if (!JtMediaPlayer.getInstance().isPrepared()) {
+                result = "00:00";
+            } else {
+                result = PlayerUtils.intToString(JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition(), null)
+                        + ":" + PlayerUtils.intToString(JtMediaPlayer.getInstance().getMediaPlayer().getDuration(), null);
             }
-
-            Log.d(TAG,JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition()+","+ JtMediaPlayer.getInstance().getMediaPlayer().getDuration());
+            Log.d(TAG, JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition() + "," + JtMediaPlayer.getInstance().getMediaPlayer().getDuration());
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return result ;
-    }
-
-    // currentTime要转换的long类型的时间
-    public static String intToString(int currentTime, String formatType)
-            throws ParseException {
-        if(formatType==null){
-            formatType= "mm:ss";
-        }
-        Date date = intToDate(currentTime, formatType); // int类型转成Date类型
-        String strTime = dateToString(date, formatType); // date类型转成String
-        return strTime;
-    }
-
-    // strTime要转换的string类型的时间，formatType要转换的格式yyyy-MM-dd HH:mm:ss//yyyy年MM月dd日
-    // HH时mm分ss秒，
-    // strTime的时间格式必须要与formatType的时间格式相同
-    public static Date stringToDate(String strTime, String formatType)
-            throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat(formatType, Locale.CHINA);
-        Date date = null;
-        if(strTime==null){
-            return null;
-        }
-        date = formatter.parse(strTime);
-        return date;
-    }
-
-    // formatType格式为yyyy-MM-dd HH:mm:ss//yyyy年MM月dd日 HH时mm分ss秒
-    // data Date类型的时间
-    public static String dateToString(Date data, String formatType) {
-        return new SimpleDateFormat(formatType, Locale.CHINA).format(data);
-    }
-
-    // currentTime要转换的long类型的时间
-    // formatType要转换的时间格式yyyy-MM-dd HH:mm:ss//yyyy年MM月dd日 HH时mm分ss秒
-    public static Date intToDate(long currentTime, String formatType)
-            throws ParseException {
-        Date dateOld = new Date(currentTime); // 根据long类型的毫秒数生命一个date类型的时间
-        String sDateTime = dateToString(dateOld, formatType); // 把date类型的时间转换为string
-        Date date = stringToDate(sDateTime, formatType); // 把String类型转换为Date类型
-        return date;
+        return result;
     }
 
 
@@ -136,41 +97,42 @@ public class JtPlayerControl {
         this.playModeLiveData = playModeLiveData;
     }
 
-    public JtPlayerControl(){
+    public JtPlayerControl() {
         init();
     }
 
 
-
+    @Override
     public void init() {
 
         //注册播放器状态更新回调
-        JtMediaPlayer.getInstance().setMediaPlayerCallBack(new JtMediaPlayer.JtMediaPlayerCallBack() {
+        JtMediaPlayer.getInstance().setMediaPlayerCallBack(new JtMediaPlayer.IjtPlayerCallBack() {
             @Override
-            public void callBack(JtMediaPlayer.PlayerState state, JtMediaPlayer jtMediaPlayer, Object... args) {
+            public void onStatusChanged(JtMediaPlayer.PlayerState state, JtMediaPlayer jtMediaPlayer, Object... args) {
 
-                if(state == JtMediaPlayer.PlayerState.PROGRESS){
-                    //更新播放进度
-                    if(args!=null&&args.length==1&&args[0]instanceof Integer){
-                        playingInfo.setProgress(((Integer) args[0]).intValue());
-                        getPlayingInfoLiveData().setValue(playingInfo);
-                        Log.d(TAG,"播放进度："+playingInfo.getProgress());
-                    }
-                }else if(state == JtMediaPlayer.PlayerState.PREPARED){
-                         //准备就绪
-
+                if (state == JtMediaPlayer.PlayerState.PREPARED) {
+                    //准备就绪
                     getStateLiveDataLiveData().setValue(JtMediaPlayer.PlayerState.PREPARED);
-                    Log.d(TAG,"播放器准备就绪");
-                }else if(state == JtMediaPlayer.PlayerState.COMPLETE){
-                    playingInfo.setProgress((100));
-                    getPlayingInfoLiveData().setValue(playingInfo);
+                    Log.d(TAG, "播放器准备就绪");
+                } else if (state == JtMediaPlayer.PlayerState.COMPLETE) {
+                    if(JtMediaPlayer.getInstance().isPrepared()){
+                        playingInfo.setProgress((100));
+                        getPlayingInfoLiveData().setValue(playingInfo);
+                    }
                 }
+            }
 
+            @Override
+            public void onProgressChanged(JtMediaPlayer jtMediaPlayer, int progress) {
+                //更新播放进度
+                playingInfo.setProgress(progress);
+                getPlayingInfoLiveData().setValue(playingInfo);
+                Log.d(TAG, "播放进度：" + playingInfo.getProgress());
             }
         });
     }
 
-    public void release(){
+    public void release() {
 
         JtMediaPlayer.getInstance().release();
         getStateLiveDataLiveData().setValue(null);
@@ -180,24 +142,52 @@ public class JtPlayerControl {
 
     }
 
-    public void playOrPause(String url){
-        if(isPlaying()){
+    @Override
+    public void playNext() {
+
+        play(playListManager.toNext());
+
+    }
+
+    @Override
+    public void playPrevious() {
+        play(playListManager.toPrevious());
+
+    }
+
+    @Override
+    public boolean isInited() {
+        return false;
+    }
+
+    @Override
+    public void playOrPause(String url) {
+        if (isPlaying()) {
             pause();
             isPause = true;
             //分发暂停状态
-        }else{
-            play(url);
+        } else {
+            if (isPaused()) {
+                resumePlay();
+            } else {
+                play(url);
+            }
             isPause = false;
         }
         pauseLiveData.setValue(isPause);
     }
 
-    public void playOrPause(AssetFileDescriptor fd){
-        if(isPlaying()){
+    private void resumePlay() {
+        JtMediaPlayer.getInstance().resumePlay();
+    }
+
+    @Override
+    public void playOrPause(AssetFileDescriptor fd) {
+        if (isPlaying()) {
             pause();
             isPause = true;
             //分发暂停状态
-        }else{
+        } else {
             play(fd);
             isPause = false;
         }
@@ -205,48 +195,70 @@ public class JtPlayerControl {
     }
 
     public void changeSpeed(float speed) {
-            try{
-                if( JtMediaPlayer.getInstance().isInited()) {
-                    // this checks on API 23 and up
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        if (JtMediaPlayer.getInstance().getMediaPlayer().isPlaying()) {
-                            JtMediaPlayer.getInstance().getMediaPlayer().setPlaybackParams(JtMediaPlayer.getInstance().getMediaPlayer().getPlaybackParams().setSpeed(speed));
-                        } else {
-                            JtMediaPlayer.getInstance().getMediaPlayer().setPlaybackParams(JtMediaPlayer.getInstance().getMediaPlayer().getPlaybackParams().setSpeed(speed));
-                            JtMediaPlayer.getInstance().getMediaPlayer().pause();
-                        }
+        try {
+            if (JtMediaPlayer.getInstance().isInited()) {
+                // this checks on API 23 and up
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (JtMediaPlayer.getInstance().getMediaPlayer().isPlaying()) {
+                        JtMediaPlayer.getInstance().getMediaPlayer().setPlaybackParams(JtMediaPlayer.getInstance().getMediaPlayer().getPlaybackParams().setSpeed(speed));
+                    } else {
+                        JtMediaPlayer.getInstance().getMediaPlayer().setPlaybackParams(JtMediaPlayer.getInstance().getMediaPlayer().getPlaybackParams().setSpeed(speed));
+                        JtMediaPlayer.getInstance().getMediaPlayer().pause();
                     }
                 }
-            }catch (Exception e){
-                e.printStackTrace();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
+    /***
+     * 播放
+     * @param
+     */
+    private void play(Playable playable) {
+        if (playable != null) {
+            play(playable.getUrl());
+            getPlayingInfoLiveData().getValue().setPlayable(playable);
+        }
+    }
+
 
     /***
      * 播放
      * @param url
      */
-    private void play(String url){
+    private void play(String url) {
+
         JtMediaPlayer.getInstance().play(url);
+
     }
 
-    private void play(AssetFileDescriptor fd){
+    private void play(AssetFileDescriptor fd) {
+
         JtMediaPlayer.getInstance().play(fd);
+
     }
 
-    private void pause(){
+    private void pause() {
         JtMediaPlayer.getInstance().getMediaPlayer().pause();
     }
 
-    public boolean isPlaying(){
+    public boolean isPlaying() {
         return JtMediaPlayer.getInstance().isPlaying();
+    }
+
+    @Override
+    public boolean isPaused() {
+        return isPause;
     }
 
     /***
      * 跳播
      * @param progress
      */
-    public void seekPlay(int progress){
+    @Override
+    public void seekPlay(int progress) {
 
         int newPostion = (int) (JtMediaPlayer.getInstance().getMediaPlayer().getDuration() * (progress / 100.0f));
         JtMediaPlayer.getInstance().getMediaPlayer().seekTo(newPostion);
@@ -259,5 +271,11 @@ public class JtPlayerControl {
 
     public void setStateLiveData(MutableLiveData<Enum> stateLiveData) {
         this.stateLiveData = stateLiveData;
+    }
+
+    @Override
+    public void loadPlayList(PlayList pList) {
+        this.playListManager = new PlayListManager(pList);
+
     }
 }

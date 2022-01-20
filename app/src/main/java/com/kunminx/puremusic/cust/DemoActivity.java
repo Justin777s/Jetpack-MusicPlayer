@@ -1,5 +1,6 @@
 package com.kunminx.puremusic.cust;
 
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,35 +19,41 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.kunminx.player.cust.JtMediaPlayer;
 import com.kunminx.player.cust.JtPlayerControl;
+import com.kunminx.player.cust.data.AudioItem;
+import com.kunminx.player.cust.data.PlayList;
+import com.kunminx.puremusic.MainActivity;
 import com.kunminx.puremusic.R;
-
-import java.io.IOException;
 
 public class DemoActivity extends AppCompatActivity {
 
     public static String TAG = DemoActivity.class.getSimpleName();
 
-    private JtPlayerControl mPlayer;
 
     private Button mBtnStart;
     private TextView mTvOuput;
+    private TextView mTvTitle;
     private SeekBarAndText mSeekBar;
 
-    private AssetFileDescriptor fd ;
+    private AssetFileDescriptor fd;
+
+    private JtPlayerControl mPlayer;
 
     //离线模式播放
     private boolean isOfflineMode = false;
 
     private String url =
-           // "http://192.25.109.64/chenyong/workspace/-/raw/master/%E9%80%82%E8%80%81%E5%8C%96-%E8%AF%AD%E9%9F%B3%E6%92%AD%E6%8A%A5/assets/audio/female_md.mp3";
+            // "http://192.25.109.64/chenyong/workspace/-/raw/master/%E9%80%82%E8%80%81%E5%8C%96-%E8%AF%AD%E9%9F%B3%E6%92%AD%E6%8A%A5/assets/audio/female_md.mp3";
             // "http://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3";
-              "http://27.151.112.180:8005/ulb3/common/tts/male_mt.mp3" ;
+            "http://27.151.112.180:8005/ulb3/common/tts/male_mt.mp3";
+
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initPlayList();
+
         initView();
         initPlayer();
+        initPlayList();
     }
 
     @Override
@@ -57,24 +64,42 @@ public class DemoActivity extends AppCompatActivity {
     }
 
 
-
-    private void initPlayList(){
+    /***
+     * TODO 有执行时序，需要收到逻辑类里面
+     */
+    private PlayList initPlayList() {
+        PlayList playList = new PlayList();
         try {
-            fd = getAssets().openFd("male_01.mp3");
-        } catch (IOException e) {
+            //fd = getAssets().openFd("male_01.mp3");
+
+            playList.getList().add(new AudioItem("男声_01_male_01.mp3", "http://27.151.112.180:8005/ulb3/common/tts/male_01.mp3"));
+            playList.getList().add(new AudioItem("男声_mt_male_mt.mp3", "http://27.151.112.180:8005/ulb3/common/tts/male_mt.mp3"));
+            playList.getList().add(new AudioItem("女声_female_md.mp3", "http://27.151.112.180:8005/ulb3/common/tts/female_md.mp3"));
+
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return playList;
+
     }
 
-    private void initView(){
+    private void initView() {
 
         this.setContentView(R.layout.activity_cust);
+
+        this.findViewById(R.id.btn_index).setOnClickListener(view -> {
+            startActivity(new Intent(DemoActivity.this, MainActivity.class));
+        });
+
+        mTvTitle = this.findViewById(R.id.tv_playable_title);
         mBtnStart = this.findViewById(R.id.btn_start);
         mBtnStart.setOnClickListener(view -> {
             //播放
-            if(isOfflineMode){
+            if (isOfflineMode) {
                 getPlayerControl().playOrPause(fd);
-            }else{
+            } else {
                 getPlayerControl().playOrPause(url);
             }
 
@@ -84,11 +109,12 @@ public class DemoActivity extends AppCompatActivity {
 
 
         //SeekBar
-        mSeekBar = (SeekBarAndText)findViewById(R.id.music_seek_bar);
+        mSeekBar = (SeekBarAndText) findViewById(R.id.music_seek_bar);
+        mSeekBar.setProgress(0);
         mSeekBar.setSongTimeCallBack(new SeekBarAndText.SongTimeCallBack() {
             @Override
             public String getSongTime(int progress) {
-                return ""+progress;
+                return "" + progress;
             }
 
             @Override
@@ -99,89 +125,100 @@ public class DemoActivity extends AppCompatActivity {
         mSeekBar.setOnSeekBarChangeListener(new SeekBarAndText.OnSeekBarAndtextChangeListener() {
             @Override
             public void onProgress(SeekBar seekBar, int progress, float indicatorOffset) {
-                Log.d(TAG,"onProgress:"+progress+","+indicatorOffset);
+                Log.d(TAG, "onProgress:" + progress + "," + indicatorOffset);
             }
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromuser) {
-                Log.d(TAG,"onProgressChanged:"+progress+","+fromuser);
+                Log.d(TAG, "onProgressChanged:" + progress + "," + fromuser);
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                Log.d(TAG,"onStartTrackingTouch");
+                Log.d(TAG, "onStartTrackingTouch");
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.d(TAG,"onStopTrackingTouch");
+                Log.d(TAG, "onStopTrackingTouch");
                 //progress to seconds
-                int position = seekBar.getProgress() ;
+                int position = seekBar.getProgress();
                 doPlayBySeekChange(position);
             }
         });
+
+
+        this.findViewById(R.id.btn_next).setOnClickListener(view -> {
+            getPlayerControl().playNext();
+        });
+        this.findViewById(R.id.btn_last).setOnClickListener(view -> {
+            getPlayerControl().playPrevious();
+        });
+
         initSpeedOptions();
     }
 
-    private void  doPlayBySeekChange(int progress) {
+    private void doPlayBySeekChange(int progress) {
         getPlayerControl().seekPlay(progress);
 
     }
 
 
-
-    //TODO 单例实现
-    private  synchronized JtPlayerControl getPlayerControl(){
-        if(mPlayer == null) {
-            return  initPlayer();
+    private synchronized JtPlayerControl getPlayerControl() {
+        if(mPlayer==null){
+            mPlayer = new JtPlayerControl();
+            mPlayer.loadPlayList(initPlayList());
         }
         return mPlayer;
     }
 
-    private JtPlayerControl initPlayer(){
-
-        mPlayer = new JtPlayerControl();
-
-        mPlayer.getPauseLiveData().observe(this,  aBoolean ->{
+    private void initPlayer() {
+        getPlayerControl().getPauseLiveData().observe(this, aBoolean -> {
             String tips = "";
-            if(aBoolean){
-                tips="播放停止";
-            }else{
-                tips="播放开始";
+            if (aBoolean) {
+                tips = "播放停止";
+            } else {
+                tips = "播放开始";
             }
-            Toast.makeText(this,tips,Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, tips, Toast.LENGTH_SHORT).show();
             mTvOuput.setText(tips);
-            Log.i("Demo","播放开始 " );
+            Log.i("Demo", "播放开始 ");
         });
 
-        mPlayer.getPlayingInfoLiveData().observe(this, playingInfo -> {
-            if(playingInfo!=null){
-                mTvOuput.setText("播放进度："+playingInfo.getProgress()+"%");
-                Log.i("Demo","播放进度："+playingInfo.getProgress()+"%");
+        getPlayerControl().getPlayingInfoLiveData().observe(this, playingInfo -> {
+            if (playingInfo != null) {
+
+                //单独拿出来
+                if(playingInfo.getPlayable()!=null){
+                    mTvTitle.setText(playingInfo.getPlayable().getTitle());
+                }
+                mTvOuput.setText("播放进度：" + playingInfo.getProgress() + "%");
+                Log.i("Demo", "播放进度：" + playingInfo.getProgress() + "%");
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    mSeekBar.setProgress(playingInfo.getProgress(),false);
-                }else{
+                    mSeekBar.setProgress(playingInfo.getProgress(), false);
+                } else {
                     mSeekBar.setProgress(playingInfo.getProgress());
                 }
 
             }
         });
 
-        mPlayer.getStateLiveDataLiveData().observe(this,state -> {
-            if(state == JtMediaPlayer.PlayerState.PREPARED){
+        getPlayerControl().getStateLiveDataLiveData().observe(this, state -> {
+            if (state == JtMediaPlayer.PlayerState.PREPARED) {
                 //更新进度条
-                mSeekBar.postInvalidate();
-            }else if(state == JtMediaPlayer.PlayerState.COMPLETE){
-               mSeekBar.handlerOnComplate();
+                 mSeekBar.postInvalidate();
+            } else if (state == JtMediaPlayer.PlayerState.COMPLETE) {
+                if(JtMediaPlayer.getInstance().isPrepared()){
+                    mSeekBar.handlerOnComplate();
+                }
+
             }
 
         });
 
 
-        return mPlayer;
     }
-
 
 
     private String[] getSpeedStrings() {
@@ -192,34 +229,26 @@ public class DemoActivity extends AppCompatActivity {
      * 播放速度设置
      */
     private void initSpeedOptions() {
-        final Spinner speedOptions = (Spinner)findViewById(R.id.spi_speed);
+        final Spinner speedOptions = (Spinner) findViewById(R.id.spi_speed);
         String[] speeds = getSpeedStrings();
 
-        ArrayAdapter<String> arrayAdapter =  new ArrayAdapter<>(this,
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_dropdown_item, speeds);
         speedOptions.setAdapter(arrayAdapter);
 
-        // change player playback speed if a speed is selected
         speedOptions.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-
-
-                    float selectedSpeed = Float.parseFloat(
-                            speedOptions.getItemAtPosition(i).toString());
-
-                    mPlayer.changeSpeed(selectedSpeed);
-
+                float selectedSpeed = Float.parseFloat(
+                        speedOptions.getItemAtPosition(i).toString());
+                getPlayerControl().changeSpeed(selectedSpeed);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-
             }
         });
     }
-
-
 
 
 }

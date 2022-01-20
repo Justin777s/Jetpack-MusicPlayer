@@ -1,7 +1,12 @@
 package com.kunminx.player.cust.data;
 
 /***
- * 音频记录
+ * 音频
  */
-public class AudioItem {
+public class AudioItem extends Playable{
+
+
+    public AudioItem(String title, String url) {
+        super(title, url);
+    }
 }
