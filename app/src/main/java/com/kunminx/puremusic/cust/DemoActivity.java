@@ -71,11 +71,9 @@ public class DemoActivity extends AppCompatActivity {
         PlayList playList = new PlayList();
         try {
             //fd = getAssets().openFd("male_01.mp3");
-
             playList.getList().add(new AudioItem("男声_01_male_01.mp3", "http://27.151.112.180:8005/ulb3/common/tts/male_01.mp3"));
             playList.getList().add(new AudioItem("男声_mt_male_mt.mp3", "http://27.151.112.180:8005/ulb3/common/tts/male_mt.mp3"));
             playList.getList().add(new AudioItem("女声_female_md.mp3", "http://27.151.112.180:8005/ulb3/common/tts/female_md.mp3"));
-
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -151,7 +149,7 @@ public class DemoActivity extends AppCompatActivity {
         this.findViewById(R.id.btn_next).setOnClickListener(view -> {
             getPlayerControl().playNext();
         });
-        this.findViewById(R.id.btn_last).setOnClickListener(view -> {
+        this.findViewById(R.id.btn_previous).setOnClickListener(view -> {
             getPlayerControl().playPrevious();
         });
 
