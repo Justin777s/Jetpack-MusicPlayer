@@ -1,6 +1,7 @@
 package com.kunminx.player.cust;
 
 
+import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -152,6 +153,37 @@ public class JtMediaPlayer implements
             instance = new JtMediaPlayer();
         }
         return instance;
+    }
+
+    /***
+     * 提供给外部的播放方法
+     * @param fd  本地播放地址
+     * @return
+     */
+    public boolean play(AssetFileDescriptor  fd){
+
+        if(fd==null) {
+            return false;
+        }
+        try {
+            /**
+             * 其实仔细观察优酷app切换播放网络视频时的确像是这样做的：先暂停当前视频，
+             * 让mediaplayer与先前的surfaceHolder脱离“绑定”,当mediaplayer再次准备好要start时，
+             * 再次让mediaplayer与surfaceHolder“绑定”在一起，显示下一个要播放的视频。
+             * 注：MediaPlayer.setDisplay()的作用： 设置SurfaceHolder用于显示的视频部分媒体。
+             */
+            mediaPlayer.setDisplay(null);
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(fd.getFileDescriptor(),fd.getStartOffset(),fd.getLength());
+            setInited(true)  ;
+            mediaPlayer.prepareAsync(); //播放器进入prepared状态 回调之后，才能调用start进入isPlaying状态
+        } catch (Exception e) {
+            e.printStackTrace();
+            doCallBack( PlayerState.ERROR, mediaPlayer);
+            return false;
+        }
+        return true;
+
     }
 
     /***

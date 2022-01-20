@@ -1,7 +1,6 @@
 package com.kunminx.puremusic.cust;
 
 import android.content.res.AssetFileDescriptor;
-import android.content.res.AssetManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,13 +32,19 @@ public class DemoActivity extends AppCompatActivity {
     private TextView mTvOuput;
     private SeekBarAndText mSeekBar;
 
+    private AssetFileDescriptor fd ;
+
+    //离线模式播放
+    private boolean isOfflineMode = false;
+
     private String url =
            // "http://192.25.109.64/chenyong/workspace/-/raw/master/%E9%80%82%E8%80%81%E5%8C%96-%E8%AF%AD%E9%9F%B3%E6%92%AD%E6%8A%A5/assets/audio/female_md.mp3";
-             "http://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3";
-
+            // "http://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3";
+              "http://27.151.112.180:8005/ulb3/common/tts/male_mt.mp3" ;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initPlayList();
         initView();
         initPlayer();
     }
@@ -51,18 +56,28 @@ public class DemoActivity extends AppCompatActivity {
 
     }
 
-    private void updateSeekBar(){
-        mSeekBar.postInvalidate();
+
+
+    private void initPlayList(){
+        try {
+            fd = getAssets().openFd("male_01.mp3");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-
-
 
     private void initView(){
 
         this.setContentView(R.layout.activity_cust);
         mBtnStart = this.findViewById(R.id.btn_start);
         mBtnStart.setOnClickListener(view -> {
+            //播放
+            if(isOfflineMode){
+                getPlayerControl().playOrPause(fd);
+            }else{
                 getPlayerControl().playOrPause(url);
+            }
+
         });
         mTvOuput = this.findViewById(R.id.tv_output);
         mTvOuput.setText("点击播放吧！");
@@ -105,7 +120,7 @@ public class DemoActivity extends AppCompatActivity {
                 doPlayBySeekChange(position);
             }
         });
-        setSpeedOptions();
+        initSpeedOptions();
     }
 
     private void  doPlayBySeekChange(int progress) {
@@ -156,9 +171,9 @@ public class DemoActivity extends AppCompatActivity {
         mPlayer.getStateLiveDataLiveData().observe(this,state -> {
             if(state == JtMediaPlayer.PlayerState.PREPARED){
                 //更新进度条
-                updateSeekBar();
+                mSeekBar.postInvalidate();
             }else if(state == JtMediaPlayer.PlayerState.COMPLETE){
-
+               mSeekBar.handlerOnComplate();
             }
 
         });
@@ -173,7 +188,10 @@ public class DemoActivity extends AppCompatActivity {
         return new String[]{"1.0", "1.2", "1.4", "1.6", "1.8", "2.0"};
     }
 
-    private void setSpeedOptions() {
+    /***
+     * 播放速度设置
+     */
+    private void initSpeedOptions() {
         final Spinner speedOptions = (Spinner)findViewById(R.id.spi_speed);
         String[] speeds = getSpeedStrings();
 

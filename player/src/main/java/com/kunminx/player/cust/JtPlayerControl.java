@@ -1,6 +1,7 @@
 package com.kunminx.player.cust;
 
 
+import android.content.res.AssetFileDescriptor;
 import android.os.Build;
 import android.util.Log;
 
@@ -162,6 +163,7 @@ public class JtPlayerControl {
                     Log.d(TAG,"播放器准备就绪");
                 }else if(state == JtMediaPlayer.PlayerState.COMPLETE){
                     playingInfo.setProgress((100));
+                    getPlayingInfoLiveData().setValue(playingInfo);
                 }
 
             }
@@ -185,6 +187,18 @@ public class JtPlayerControl {
             //分发暂停状态
         }else{
             play(url);
+            isPause = false;
+        }
+        pauseLiveData.setValue(isPause);
+    }
+
+    public void playOrPause(AssetFileDescriptor fd){
+        if(isPlaying()){
+            pause();
+            isPause = true;
+            //分发暂停状态
+        }else{
+            play(fd);
             isPause = false;
         }
         pauseLiveData.setValue(isPause);
@@ -214,6 +228,10 @@ public class JtPlayerControl {
      */
     private void play(String url){
         JtMediaPlayer.getInstance().play(url);
+    }
+
+    private void play(AssetFileDescriptor fd){
+        JtMediaPlayer.getInstance().play(fd);
     }
 
     private void pause(){
