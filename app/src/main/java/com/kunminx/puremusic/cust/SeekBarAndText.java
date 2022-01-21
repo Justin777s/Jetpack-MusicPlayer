@@ -20,6 +20,7 @@ import com.kunminx.puremusic.R;
  */
 public class SeekBarAndText extends AppCompatSeekBar {
 
+
     // 画笔
     private Paint mPaint;
     // 进度文字位置信息
@@ -30,7 +31,10 @@ public class SeekBarAndText extends AppCompatSeekBar {
     private OnSeekBarAndtextChangeListener onSeekBarAndtextChangeListener;
     //对外提供的接口用于返回当前要画的时间
     private SongTimeCallBack songTimeCallBack;
- 
+
+    //是否在滑动
+    private boolean isSeeking = false ;
+
     public SeekBarAndText(Context context) {
         this(context, null);
     }
@@ -67,6 +71,7 @@ public class SeekBarAndText extends AppCompatSeekBar {
                 if (onSeekBarAndtextChangeListener != null) {
                     onSeekBarAndtextChangeListener.onStartTrackingTouch(seekBar);
                 }
+                isSeeking = true;
             }
  
             @Override
@@ -74,17 +79,33 @@ public class SeekBarAndText extends AppCompatSeekBar {
                 if (onSeekBarAndtextChangeListener != null) {
                     onSeekBarAndtextChangeListener.onStopTrackingTouch(seekBar);
                 }
+                isSeeking = false ;
             }
         });
 
         this.setProgress(0);
     }
 
+
     public void handlerOnComplate(){
         this.setProgress(100);
 
     }
- 
+
+    @Override
+    public synchronized void setProgress(int progress) {
+        if(!isSeeking){
+            super.setProgress(progress);
+        }
+    }
+
+    @Override
+    public void setProgress(int progress, boolean animate) {
+        if(!isSeeking){
+            super.setProgress(progress, animate);
+        }
+    }
+
     @Override
     protected synchronized void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -93,9 +114,10 @@ public class SeekBarAndText extends AppCompatSeekBar {
             //将要画的时间对外提供
             progressText=songTimeCallBack.getDrawText();
         }
+
         //画滑块
         mPaint.getTextBounds(progressText, 0, progressText.length(), mProgressTextRect);
- 
+
         // 进度百分比
         float progressRatio = (float) getProgress() / getMax();
         float thumbOffset = (mThumbWidth - mProgressTextRect.width()) / 2 - mThumbWidth * progressRatio;
@@ -107,7 +129,9 @@ public class SeekBarAndText extends AppCompatSeekBar {
             canvas.drawText(progressText, thumbX, thumbY, mPaint);
             //mPaint.getTextBounds(progressText, 0, progressText.length(), mProgressTextRect);
             //滑块移动
-            mProgressTextRect.offsetTo((int)thumbX,(int)thumbY);
+
+             mProgressTextRect.offsetTo((int)thumbX,(int)thumbY);
+
         }else{
             canvas.drawText(progressText, (mThumbWidth - mProgressTextRect.width()) / 2 , thumbY, mPaint);
         }
@@ -121,7 +145,11 @@ public class SeekBarAndText extends AppCompatSeekBar {
     public void setOnSeekBarChangeListener(OnSeekBarAndtextChangeListener listener) {
         this.onSeekBarAndtextChangeListener = listener;
     }
- 
+
+    public boolean isSeeking() {
+        return isSeeking;
+    }
+
     /**
      * 进度监听
      */
