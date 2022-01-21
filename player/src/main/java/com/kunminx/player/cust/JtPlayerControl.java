@@ -1,11 +1,9 @@
 package com.kunminx.player.cust;
 
 
-import android.app.Application;
 import android.content.res.AssetFileDescriptor;
 import android.os.Build;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.lifecycle.MutableLiveData;
 
@@ -13,12 +11,8 @@ import com.kunminx.player.cust.data.ChangedAudio;
 import com.kunminx.player.cust.data.PlayList;
 import com.kunminx.player.cust.data.Playable;
 import com.kunminx.player.cust.data.PlayingInfo;
-import com.kunminx.player.helper.MediaPlayerHelper;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 /**
  * 提供播放控制相关的事件，以及状态更新的通知回调（LiveData）
@@ -47,14 +41,24 @@ public class JtPlayerControl implements IJtPlayerControl {
     private PlayListManager playListManager;
 
 
-    public String getProgressText() {
+    public String getProgressText(int progress,boolean fromMan) {
         String result = "";
         try {
             //TODO 未执行初始化，这里的总时长需要外部传入 未prepared的时候返回 5832704
             if (!JtMediaPlayer.getInstance().isPrepared()) {
                 result = "00:00";
             } else {
-                result = PlayerUtils.intToString(JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition(), null)
+                String current  =  "00" ;
+                //TODO 代码需要调整
+                if(fromMan){
+                    //使用 seek进度*总时长duration = 当前seek的刻度
+                    current  =  PlayerUtils.floatToString(JtMediaPlayer.getInstance().getMediaPlayer().getDuration()*(progress/100.0f), null);
+                    Log.d(TAG,"fromMan progress:"+progress+",current:"+current+","+JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition());
+                }else{
+                    current  =  PlayerUtils.intToString(JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition(),null) ;
+                    Log.d(TAG,"progress:"+progress+",current:"+current);
+                }
+                result =current
                         + ":" + PlayerUtils.intToString(JtMediaPlayer.getInstance().getMediaPlayer().getDuration(), null);
             }
             Log.d(TAG, JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition() + "," + JtMediaPlayer.getInstance().getMediaPlayer().getDuration());
@@ -106,7 +110,7 @@ public class JtPlayerControl implements IJtPlayerControl {
     public void init() {
 
         //注册播放器状态更新回调
-        JtMediaPlayer.getInstance().setMediaPlayerCallBack(new JtMediaPlayer.IjtPlayerCallBack() {
+        JtMediaPlayer.getInstance().setMediaPlayerCallBack(new JtMediaPlayer.IjtPlayerCallback() {
             @Override
             public void onStatusChanged(JtMediaPlayer.PlayerState state, JtMediaPlayer jtMediaPlayer, Object... args) {
 

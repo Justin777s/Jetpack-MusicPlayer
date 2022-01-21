@@ -1,5 +1,7 @@
 package com.kunminx.player.cust;
 
+import android.util.Log;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -10,6 +12,8 @@ import java.util.Locale;
  */
 public class PlayerUtils {
 
+    public static final String TAG = PlayerUtils.class.getSimpleName();
+
     // currentTime要转换的long类型的时间
     public static String intToString(int currentTime, String formatType)
             throws ParseException {
@@ -17,6 +21,18 @@ public class PlayerUtils {
             formatType= "mm:ss";
         }
         Date date = intToDate(currentTime, formatType); // int类型转成Date类型
+        String strTime = dateToString(date, formatType); // date类型转成String
+        return strTime;
+    }
+
+    // currentTime要转换的long类型的时间
+    public static String floatToString(float currentTime, String formatType)
+            throws ParseException {
+        Log.i(TAG,"currentTime="+currentTime);
+        if(formatType==null){
+            formatType= "mm:ss";
+        }
+        Date date = intToDate((long)currentTime, formatType); // int类型转成Date类型
         String strTime = dateToString(date, formatType); // date类型转成String
         return strTime;
     }

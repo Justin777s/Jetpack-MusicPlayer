@@ -18,9 +18,7 @@ import com.kunminx.puremusic.R;
 /***
  * https://zhuanlan.zhihu.com/p/113431984
  */
-public class SeekBarAndText extends AppCompatSeekBar {
-
-
+public class PlayerSeekBar extends AppCompatSeekBar {
     // 画笔
     private Paint mPaint;
     // 进度文字位置信息
@@ -28,22 +26,22 @@ public class SeekBarAndText extends AppCompatSeekBar {
     // 滑块按钮宽度
     private int mThumbWidth = dp2px(60);
     // 进度监听
-    private OnSeekBarAndtextChangeListener onSeekBarAndtextChangeListener;
+    private OnPlayerSeekBarChangeListener onSeekBarAndtextChangeListener;
     //对外提供的接口用于返回当前要画的时间
     private SongTimeCallBack songTimeCallBack;
 
     //是否在滑动
     private boolean isSeeking = false ;
 
-    public SeekBarAndText(Context context) {
+    public PlayerSeekBar(Context context) {
         this(context, null);
     }
  
-    public SeekBarAndText(Context context, AttributeSet attrs) {
+    public PlayerSeekBar(Context context, AttributeSet attrs) {
         this(context, attrs, R.attr.seekBarStyle);
     }
  
-    public SeekBarAndText(Context context, AttributeSet attrs, int defStyleAttr) {
+    public PlayerSeekBar(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }
@@ -56,11 +54,18 @@ public class SeekBarAndText extends AppCompatSeekBar {
  
         // 如果不设置padding，当滑动到最左边或最右边时，滑块会显示不全
         setPadding(mThumbWidth / 2, 0, mThumbWidth / 2, 0);
- 
+
+
         // 设置滑动监听
         this.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser){
+                    seekProgress = progress;
+                }else{
+                    seekProgress = -1;
+                }
+
                 if (onSeekBarAndtextChangeListener != null) {
                     onSeekBarAndtextChangeListener.onProgressChanged(seekBar,progress,fromUser);
                 }
@@ -92,6 +97,8 @@ public class SeekBarAndText extends AppCompatSeekBar {
 
     }
 
+    private int seekProgress  = 0;
+
     @Override
     public synchronized void setProgress(int progress) {
         if(!isSeeking){
@@ -112,7 +119,7 @@ public class SeekBarAndText extends AppCompatSeekBar {
         String progressText="";//要画的文字
         if(songTimeCallBack!=null) {
             //将要画的时间对外提供
-            progressText=songTimeCallBack.getDrawText();
+            progressText=songTimeCallBack.getDrawText(seekProgress,seekProgress>=0);
         }
 
         //画滑块
@@ -142,7 +149,7 @@ public class SeekBarAndText extends AppCompatSeekBar {
      *
      * @param listener OnIndicatorSeekBarChangeListener
      */
-    public void setOnSeekBarChangeListener(OnSeekBarAndtextChangeListener listener) {
+    public void setOnSeekBarChangeListener(OnPlayerSeekBarChangeListener listener) {
         this.onSeekBarAndtextChangeListener = listener;
     }
 
@@ -153,7 +160,7 @@ public class SeekBarAndText extends AppCompatSeekBar {
     /**
      * 进度监听
      */
-    public interface OnSeekBarAndtextChangeListener {
+    public interface OnPlayerSeekBarChangeListener {
           void onProgress(SeekBar seekBar, int progress, float indicatorOffset);
         /**
          * 进度监听回调
@@ -202,7 +209,7 @@ public class SeekBarAndText extends AppCompatSeekBar {
     }
     public interface SongTimeCallBack{
         String getSongTime(int progress);
-        String getDrawText();
+        String getDrawText(int progress,boolean fromMan);
     }
     public void setSongTimeCallBack(SongTimeCallBack songTimeCallBack){
         this.songTimeCallBack=songTimeCallBack;

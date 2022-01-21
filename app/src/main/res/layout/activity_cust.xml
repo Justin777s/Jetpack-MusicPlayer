@@ -52,7 +52,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_output">
 
-        <com.kunminx.puremusic.cust.SeekBarAndText
+        <com.kunminx.puremusic.cust.PlayerSeekBar
             android:id="@+id/music_seek_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

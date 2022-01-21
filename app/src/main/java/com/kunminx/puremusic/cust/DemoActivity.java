@@ -32,7 +32,7 @@ public class DemoActivity extends AppCompatActivity {
     private Button mBtnStart;
     private TextView mTvOuput;
     private TextView mTvTitle;
-    private SeekBarAndText mSeekBar;
+    private PlayerSeekBar mSeekBar;
 
     private AssetFileDescriptor fd;
 
@@ -107,20 +107,20 @@ public class DemoActivity extends AppCompatActivity {
 
 
         //SeekBar
-        mSeekBar = (SeekBarAndText) findViewById(R.id.music_seek_bar);
+        mSeekBar = (PlayerSeekBar) findViewById(R.id.music_seek_bar);
         mSeekBar.setProgress(0);
-        mSeekBar.setSongTimeCallBack(new SeekBarAndText.SongTimeCallBack() {
+        mSeekBar.setSongTimeCallBack(new PlayerSeekBar.SongTimeCallBack() {
             @Override
             public String getSongTime(int progress) {
                 return "" + progress;
             }
 
             @Override
-            public String getDrawText() {
-                return getPlayerControl().getProgressText();
+            public String getDrawText(int progress,boolean fromMan) {
+                return getPlayerControl().getProgressText(progress,fromMan);
             }
         });
-        mSeekBar.setOnSeekBarChangeListener(new SeekBarAndText.OnSeekBarAndtextChangeListener() {
+        mSeekBar.setOnSeekBarChangeListener(new PlayerSeekBar.OnPlayerSeekBarChangeListener() {
             @Override
             public void onProgress(SeekBar seekBar, int progress, float indicatorOffset) {
                 Log.d(TAG, "onProgress:" + progress + "," + indicatorOffset);

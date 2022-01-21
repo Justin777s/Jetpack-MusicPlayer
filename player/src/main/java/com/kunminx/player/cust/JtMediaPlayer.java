@@ -26,7 +26,7 @@ public class JtMediaPlayer implements
 
     private MediaPlayer mediaPlayer ;
 
-    private IjtPlayerCallBack mCallBack;
+    private IjtPlayerCallback mCallback;
 
     //是否已经初始化
     private boolean isInited = false;
@@ -69,9 +69,9 @@ public class JtMediaPlayer implements
             if(mediaPlayer!=null && mediaPlayer.isPlaying()){
                int progress =(int) 100.0f * mediaPlayer.getCurrentPosition() / mediaPlayer.getDuration();
 
-               if(mCallBack!=null){
+               if(mCallback !=null){
                    Log.v(TAG,  "进度："+progress);
-                   mCallBack.onProgressChanged(instance,progress);
+                   mCallback.onProgressChanged(instance,progress);
                }
             }
 
@@ -82,8 +82,8 @@ public class JtMediaPlayer implements
     };
 
 
-    public JtMediaPlayer setMediaPlayerCallBack(IjtPlayerCallBack mCallBack) {
-        this.mCallBack = mCallBack;
+    public JtMediaPlayer setMediaPlayerCallBack(IjtPlayerCallback mCallBack) {
+        this.mCallback = mCallBack;
         return instance;
     }
 
@@ -174,7 +174,7 @@ public class JtMediaPlayer implements
             mediaPlayer.start();
         } catch (Exception e) {
             e.printStackTrace();
-            doCallBack( PlayerState.ERROR, mediaPlayer);
+            doCallback( PlayerState.ERROR, mediaPlayer);
             return false;
         }
         return true;
@@ -205,7 +205,7 @@ public class JtMediaPlayer implements
             mediaPlayer.prepareAsync(); //播放器进入prepared状态 回调之后，才能调用start进入isPlaying状态
         } catch (Exception e) {
             e.printStackTrace();
-            doCallBack( PlayerState.ERROR, mediaPlayer);
+            doCallback( PlayerState.ERROR, mediaPlayer);
             return false;
         }
         return true;
@@ -239,7 +239,7 @@ public class JtMediaPlayer implements
             mediaPlayer.prepareAsync(); //播放器进入prepared状态 回调之后，才能调用start进入isPlaying状态
         } catch (Exception e) {
             e.printStackTrace();
-            doCallBack( PlayerState.ERROR, mediaPlayer);
+            doCallback( PlayerState.ERROR, mediaPlayer);
             return false;
         }
         return true;
@@ -260,7 +260,7 @@ public class JtMediaPlayer implements
             }
         }
         if (!surport) {
-            doCallBack( PlayerState.FORMATE_NOT_SURPORT, this.mediaPlayer);
+            doCallback( PlayerState.FORMATE_NOT_SURPORT, this.mediaPlayer);
             Log.v(TAG,  PlayerState.FORMATE_NOT_SURPORT.toString());
             return false;
         }
@@ -287,7 +287,7 @@ public class JtMediaPlayer implements
         //回调进度，独立更新进度，不与播放完成共用状态。
        // doCallBack(PlayerState.PROGRESS,new Integer(100));
         //回调播放完成
-        doCallBack(PlayerState.COMPLETE,mp);
+        doCallback(PlayerState.COMPLETE,mp);
     }
 
     @Override
@@ -319,10 +319,10 @@ public class JtMediaPlayer implements
         }catch (Exception e){
             e.printStackTrace();
             Log.v(TAG,"onPrepared error："+e.getMessage());
-            doCallBack(PlayerState.ERROR, mp);
+            doCallback(PlayerState.ERROR, mp);
         }
         //更新播放准备完毕状态
-        doCallBack(PlayerState.PREPARED,mp);
+        doCallback(PlayerState.PREPARED,mp);
 
     }
 
@@ -339,9 +339,9 @@ public class JtMediaPlayer implements
         Log.v(TAG,"onVideoSizeChanged:"+width+","+height);
     }
 
-    private void doCallBack(PlayerState state , Object... args){
-        if(mCallBack!=null){
-            mCallBack.onStatusChanged(state,instance,args);
+    private void doCallback(PlayerState state , Object... args){
+        if(mCallback !=null){
+            mCallback.onStatusChanged(state,instance,args);
         }
     }
 
@@ -350,7 +350,7 @@ public class JtMediaPlayer implements
     /***
      * 状态更新回调，
      */
-    public interface IjtPlayerCallBack {
+    public interface IjtPlayerCallback {
         /***
          *
          * @param state 状态
