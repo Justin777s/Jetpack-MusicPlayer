@@ -33,6 +33,10 @@ public class JtPlayerControl implements IJtPlayerControl {
     //播放模式 暂时用不到
     private MutableLiveData<Integer> playModeLiveData = new MutableLiveData<>();
 
+    //当前播放的音乐
+    private MutableLiveData<Playable> currentPlayableLiveData = new MutableLiveData<>();
+
+
     private PlayingInfo playingInfo = new PlayingInfo();
     private ChangedAudio changedAudio = new ChangedAudio();
     private Boolean isPause = false;
@@ -41,24 +45,24 @@ public class JtPlayerControl implements IJtPlayerControl {
     private PlayListManager playListManager;
 
 
-    public String getProgressText(int progress,boolean fromMan) {
+    public String getProgressText(int progress, boolean fromMan) {
         String result = "";
         try {
             //TODO 未执行初始化，这里的总时长需要外部传入 未prepared的时候返回 5832704
             if (!JtMediaPlayer.getInstance().isPrepared()) {
                 result = "00:00";
             } else {
-                String current  =  "00" ;
+                String current = "00";
                 //TODO 代码需要调整
-                if(fromMan){
+                if (fromMan) {
                     //使用 seek进度*总时长duration = 当前seek的刻度
-                    current  =  PlayerUtils.floatToString(JtMediaPlayer.getInstance().getMediaPlayer().getDuration()*(progress/100.0f), null);
-                    Log.d(TAG,"fromMan progress:"+progress+",current:"+current+","+JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition());
-                }else{
-                    current  =  PlayerUtils.intToString(JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition(),null) ;
-                    Log.d(TAG,"progress:"+progress+",current:"+current);
+                    current = PlayerUtils.floatToString(JtMediaPlayer.getInstance().getMediaPlayer().getDuration() * (progress / 100.0f), null);
+                    Log.d(TAG, "fromMan progress:" + progress + ",current:" + current + "," + JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition());
+                } else {
+                    current = PlayerUtils.intToString(JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition(), null);
+                    Log.d(TAG, "progress:" + progress + ",current:" + current);
                 }
-                result =current
+                result = current
                         + ":" + PlayerUtils.intToString(JtMediaPlayer.getInstance().getMediaPlayer().getDuration(), null);
             }
             Log.d(TAG, JtMediaPlayer.getInstance().getMediaPlayer().getCurrentPosition() + "," + JtMediaPlayer.getInstance().getMediaPlayer().getDuration());
@@ -119,7 +123,8 @@ public class JtPlayerControl implements IJtPlayerControl {
                     getStateLiveDataLiveData().setValue(JtMediaPlayer.PlayerState.PREPARED);
                     Log.d(TAG, "播放器准备就绪");
                 } else if (state == JtMediaPlayer.PlayerState.COMPLETE) {
-                    if(JtMediaPlayer.getInstance().isPrepared()){
+                    if (JtMediaPlayer.getInstance().isPrepared()) {
+
                         playingInfo.setProgress((100));
                         getPlayingInfoLiveData().setValue(playingInfo);
                     }
@@ -148,11 +153,10 @@ public class JtPlayerControl implements IJtPlayerControl {
 
     @Override
     public void playNext() {
-
         play(playListManager.toNext());
-
     }
 
+    @Deprecated
     @Override
     public void playPrevious() {
         play(playListManager.toPrevious());
@@ -161,29 +165,15 @@ public class JtPlayerControl implements IJtPlayerControl {
 
     @Override
     public boolean isInited() {
-        return false;
+        return JtMediaPlayer.getInstance().isInited();
     }
 
+    @Deprecated
     @Override
     public void playOrPause(String url) {
-        if (isPlaying()) {
-            pause();
-            isPause = true;
-            //分发暂停状态
-        } else {
-            if (isPaused()) {
-                resumePlay();
-            } else {
-                play(url);
-            }
-            isPause = false;
-        }
-        pauseLiveData.setValue(isPause);
+
     }
 
-    private void resumePlay() {
-        JtMediaPlayer.getInstance().resumePlay();
-    }
 
     @Override
     public void playOrPause(AssetFileDescriptor fd) {
@@ -216,6 +206,21 @@ public class JtPlayerControl implements IJtPlayerControl {
         }
     }
 
+
+    /***
+     * 指定播放清单播放
+     * @param index
+     */
+    public void play(int index) {
+        try {
+            if (playListManager != null) {
+                play(playListManager.changeTo(index));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /***
      * 播放
      * @param
@@ -223,11 +228,7 @@ public class JtPlayerControl implements IJtPlayerControl {
     private void play(Playable playable) {
         if (playable != null) {
             play(playable.getUrl());
-            if(getPlayingInfoLiveData().getValue()==null){
-                PlayingInfo pInfo = new PlayingInfo();
-                getPlayingInfoLiveData().setValue(pInfo);
-            }
-            getPlayingInfoLiveData().getValue().setPlayable(playable);
+            getCurrentPlayableLiveData().setValue(playable);
         }
     }
 
@@ -236,6 +237,7 @@ public class JtPlayerControl implements IJtPlayerControl {
      * 播放
      * @param url
      */
+
     private void play(String url) {
 
         JtMediaPlayer.getInstance().play(url);
@@ -285,5 +287,13 @@ public class JtPlayerControl implements IJtPlayerControl {
     public void loadPlayList(PlayList pList) {
         this.playListManager = new PlayListManager(pList);
 
+    }
+
+    public MutableLiveData<Playable> getCurrentPlayableLiveData() {
+        return currentPlayableLiveData;
+    }
+
+    public void setCurrentPlayableLiveData(MutableLiveData<Playable> currentPlayableLiveData) {
+        this.currentPlayableLiveData = currentPlayableLiveData;
     }
 }

@@ -99,17 +99,32 @@
             app:layout_constraintStart_toEndOf="@id/btn_start"
             app:layout_constraintTop_toTopOf="@id/btn_start"></Button>
 
-        <Button
-            android:id="@+id/btn_playlist"
+        <!-- 选择器 -->
+        <Spinner
+            android:id="@+id/spi_playlist"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginLeft="20dp"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="20dp"
+            android:spinnerMode="dropdown"
             android:background="@drawable/icon_playlist"
-            app:layout_constraintBottom_toBottomOf="@id/btn_start"
+            app:layout_constraintBottom_toBottomOf="@id/tv_speed"
+            app:layout_constraintEnd_toStartOf="@id/tv_speed"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/btn_start"></Button>
+            app:layout_constraintTop_toTopOf="@id/tv_speed"
+            app:layout_constraintVertical_bias="0.09"></Spinner>
 
+
+
+        <TextView
+            android:id="@+id/tv_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="语速："
+            app:layout_constraintTop_toTopOf="@id/spi_speed"
+            app:layout_constraintBottom_toBottomOf="@id/spi_speed"
+            app:layout_constraintEnd_toStartOf="@id/spi_speed"
+            ></TextView>
         <Spinner
             android:id="@+id/spi_speed"
             android:layout_width="wrap_content"
@@ -120,6 +135,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btn_start"></Spinner>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

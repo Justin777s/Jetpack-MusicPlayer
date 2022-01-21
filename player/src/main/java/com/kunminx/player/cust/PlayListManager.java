@@ -22,7 +22,8 @@ public class PlayListManager {
         currentIdx = initIndex;
     }
 
-    public Playable getCurrentPlayable() throws NullPointerException {
+    public Playable changeTo(int index) throws NullPointerException {
+        currentIdx = index;
         return getPlayable(currentIdx);
     }
 
@@ -30,13 +31,15 @@ public class PlayListManager {
      * 获取 播放对象
      * @return
      */
-    private Playable getPlayable(int index) {
+    public Playable getPlayable(int index) {
         if (playList != null && playList.getList().size() > index) {
             return playList.getList().get(index);
         } else {
             return null;
         }
     }
+
+
 
 
     /***
@@ -64,12 +67,14 @@ public class PlayListManager {
         return 0;
     }
 
-    private boolean hasNext(int index) {
+    public boolean hasNext(int index) {
         if ((index + 1) < (getCount())) {
             return true;
         } else {
             return false;
         }
     }
+
+
 
 }

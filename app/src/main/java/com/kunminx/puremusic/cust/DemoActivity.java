@@ -41,34 +41,29 @@ public class DemoActivity extends AppCompatActivity {
     //离线模式播放
     private boolean isOfflineMode = false;
 
-    private String url =
-            // "http://192.25.109.64/chenyong/workspace/-/raw/master/%E9%80%82%E8%80%81%E5%8C%96-%E8%AF%AD%E9%9F%B3%E6%92%AD%E6%8A%A5/assets/audio/female_md.mp3";
-            // "http://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3";
-            "http://27.151.112.180:8005/ulb3/common/tts/male_mt.mp3";
-
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        initData();
         initView();
         initPlayer();
-        initPlayList();
+
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        getPlayerControl().release();
+        mPlayer.release();
 
     }
 
+    private PlayList playList = new PlayList() ;
 
     /***
      * TODO 有执行时序，需要收到逻辑类里面
      */
-    private PlayList initPlayList() {
-        PlayList playList = new PlayList();
+    private PlayList initData() {
+         playList = new PlayList();
         try {
             //fd = getAssets().openFd("male_01.mp3");
             playList.getList().add(new AudioItem("男声_01_male_01.mp3", "http://27.151.112.180:8005/ulb3/common/tts/male_01.mp3"));
@@ -91,14 +86,15 @@ public class DemoActivity extends AppCompatActivity {
             startActivity(new Intent(DemoActivity.this, MainActivity.class));
         });
 
+
         mTvTitle = this.findViewById(R.id.tv_playable_title);
         mBtnStart = this.findViewById(R.id.btn_start);
         mBtnStart.setOnClickListener(view -> {
             //播放
             if (isOfflineMode) {
-                getPlayerControl().playOrPause(fd);
+                mPlayer.playOrPause(fd);
             } else {
-                getPlayerControl().playOrPause(url);
+                mPlayer.play(0);
             }
 
         });
@@ -117,7 +113,7 @@ public class DemoActivity extends AppCompatActivity {
 
             @Override
             public String getDrawText(int progress,boolean fromMan) {
-                return getPlayerControl().getProgressText(progress,fromMan);
+                return mPlayer.getProgressText(progress,fromMan);
             }
         });
         mSeekBar.setOnSeekBarChangeListener(new PlayerSeekBar.OnPlayerSeekBarChangeListener() {
@@ -147,31 +143,30 @@ public class DemoActivity extends AppCompatActivity {
 
 
         this.findViewById(R.id.btn_next).setOnClickListener(view -> {
-            getPlayerControl().playNext();
+            mPlayer.playNext();
         });
         this.findViewById(R.id.btn_previous).setOnClickListener(view -> {
-            getPlayerControl().playPrevious();
+            mPlayer.playPrevious();
         });
 
         initSpeedOptions();
+        initPlayListSpi();
     }
 
     private void doPlayBySeekChange(int progress) {
-        getPlayerControl().seekPlay(progress);
+        mPlayer.seekPlay(progress);
 
     }
 
 
-    private synchronized JtPlayerControl getPlayerControl() {
-        if(mPlayer==null){
-            mPlayer = new JtPlayerControl();
-            mPlayer.loadPlayList(initPlayList());
-        }
-        return mPlayer;
-    }
+
 
     private void initPlayer() {
-        getPlayerControl().getPauseLiveData().observe(this, aBoolean -> {
+
+        mPlayer = new JtPlayerControl();
+        mPlayer.loadPlayList(initData());
+        //监听暂停播放
+        mPlayer.getPauseLiveData().observe(this, aBoolean -> {
             String tips = "";
             if (aBoolean) {
                 tips = "播放停止";
@@ -183,13 +178,10 @@ public class DemoActivity extends AppCompatActivity {
             Log.i("Demo", "播放开始 ");
         });
 
-        getPlayerControl().getPlayingInfoLiveData().observe(this, playingInfo -> {
+        //监听播放数据更新（包含进度，内容等）
+        mPlayer.getPlayingInfoLiveData().observe(this, playingInfo -> {
             if (playingInfo != null) {
 
-                //单独拿出来
-                if(playingInfo.getPlayable()!=null){
-                    mTvTitle.setText(playingInfo.getPlayable().getTitle());
-                }
                 mTvOuput.setText("播放进度：" + playingInfo.getProgress() + "%");
                 Log.i("Demo", "播放进度：" + playingInfo.getProgress() + "%");
 
@@ -202,7 +194,7 @@ public class DemoActivity extends AppCompatActivity {
             }
         });
 
-        getPlayerControl().getStateLiveDataLiveData().observe(this, state -> {
+        mPlayer.getStateLiveDataLiveData().observe(this, state -> {
             if (state == JtMediaPlayer.PlayerState.PREPARED) {
                 //更新进度条
                  mSeekBar.postInvalidate();
@@ -210,9 +202,13 @@ public class DemoActivity extends AppCompatActivity {
                 if(JtMediaPlayer.getInstance().isPrepared()){
                     mSeekBar.handlerOnComplate();
                 }
-
             }
+        });
 
+        mPlayer.getCurrentPlayableLiveData().observe(this,playable->{
+            if(playable!=null){
+                mTvTitle.setText(playable.getTitle());
+            }
         });
 
 
@@ -222,6 +218,8 @@ public class DemoActivity extends AppCompatActivity {
     private String[] getSpeedStrings() {
         return new String[]{"1.0", "1.2", "1.4", "1.6", "1.8", "2.0"};
     }
+
+
 
     /***
      * 播放速度设置
@@ -239,7 +237,32 @@ public class DemoActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 float selectedSpeed = Float.parseFloat(
                         speedOptions.getItemAtPosition(i).toString());
-                getPlayerControl().changeSpeed(selectedSpeed);
+                mPlayer.changeSpeed(selectedSpeed);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+    }
+
+
+    /***
+     * 播放速度设置
+     */
+    private void initPlayListSpi() {
+        final Spinner speedOptions = (Spinner) findViewById(R.id.spi_playlist);
+
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_dropdown_item, playList.getArrays());
+        speedOptions.setAdapter(arrayAdapter);
+
+        speedOptions.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if(mPlayer.isInited()){
+                    mPlayer.play(i);
+                }
             }
 
             @Override
